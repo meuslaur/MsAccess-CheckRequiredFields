@@ -23,14 +23,17 @@ Utilitaire pour contrôler les saisies dans un formulaire
 - Insèrez le code suivat sur l'évennement `BeforeUpdate` du formulaire :
 ```VBA
 Private Sub Form_BeforeUpdate(Cancel As Integer)
+On Error GoTo ERR_MajF
     Dim sRep As String
-    
-    sRep = VerifChampSaisieRequi(Me.Name)
-    
+
+    sRep = VerifSaisieForm()
     If (sRep <> vbNullString) Then
-        '// Your Code here
-        '// Your Code here
+        Cancel = True
+        '// Your code here
+        '// Your code here
+        Exit Sub
     End If
+'.....
 End Sub
 ```
 
