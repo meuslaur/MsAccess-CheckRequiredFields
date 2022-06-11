@@ -4,7 +4,7 @@
 ## Ajoute des procédures :
 ### VerifSaisieForm()
 - Vérification des saisies de tous les contrôles avec champs requis.
-- Utilisation : Appliquer sur l'évennement BeforeUpdate du form { `=VerifSaisieForm()` }
+- Utilisation : Appliquer sur l'évennement BeforeUpdate du form { `Private Sub Form_BeforeUpdate....` }
 ### VerifSaisieControl()
 - Vérifie la saisie du contrôle actif, permet de remetre la couleur du label à l'origine si saisie faite.
 - Utilisation : Appliquer sur l'évennement BeforeUpdate du contrôle  { `=VerifSaisieControl()` }
