@@ -8,16 +8,63 @@ Option Explicit
 ' Purpose: Fonctions de vérification pour le champs à saisie obligatoire.
 ' Author:  Laurent
 ' Date:    09/06/2022 - 14:08
-' DateMod:
+' DateMod: 11/06/2022 - 13:39
 ' ------------------------------------------------------
 
 '//::::::::::::::::::::::::::::::::::    VARIABLES      ::::::::::::::::::::::::::::::::::
 Private m_oFrm       As Form
 Private m_oCtr       As Control
 Private Const REPCOL As String = "#"
+Private sReponse     As String
 '//:::::::::::::::::::::::::::::::::: END VARIABLES ::::::::::::::::::::::::::::::::::::::
 
 '// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ PUBLIC SUB/FUNC   \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+' ----------------------------------------------------------------
+' Procedure Nom:    VerifSaisieForm
+' Sujet:            Vérification des saisies de tous les contrôles avec champs requis.
+' Procedure Kind:   Function
+' Procedure Access: Public
+'
+' Return Type: String   Retourne la liste des champs requis et non saisis.
+'
+' Author:  Laurent
+' Date:    11/06/2022 - 13:34
+' DateMod:
+' ----------------------------------------------------------------
+Public Function VerifSaisieForm() As String
+    sReponse = VerifChampSaisieRequi()
+    VerifSaisieForm = sReponse
+End Function
+' ----------------------------------------------------------------
+' Procedure Nom:    VerifSaisieControl
+' Sujet:            Vérifie la saisie du contrôle actif.
+' Procedure Kind:   Function
+' Procedure Access: Public
+'
+' Author:  Laurent
+' Date:    11/06/2022 - 13:36
+' DateMod:
+' ----------------------------------------------------------------
+Public Function VerifSaisieControl() As Boolean
+    sReponse = VerifChampSaisieRequi(True)
+End Function
+' ----------------------------------------------------------------
+' Procedure Nom:    VerifSaisieRestaureLbl
+' Sujet:            Restaure tous les labels modifiés, à utiliser sur l'évennement Cancel du form.
+' Procedure Kind:   Function
+' Procedure Access: Public
+'
+' Author:  Laurent
+' Date:    11/06/2022 - 13:37
+' DateMod:
+' ----------------------------------------------------------------
+Public Function VerifSaisieRestaureLbl() As Boolean
+    sReponse = VerifChampSaisieRequi(False, True)
+End Function
+'// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ END PUB. SUB/FUNC \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+'// ################################ PRIVATE SUB/FUNC ####################################
 
 ' ----------------------------------------------------------------
 '// Vérification de la saisie des champs obligatoire dans le form.
@@ -27,27 +74,43 @@ Private Const REPCOL As String = "#"
 '                           La vérification est faite sur les champs la table source.
 '                           les controles non null, non visible, non activés sont ignorés
 ' Procedure Kind:   Function
-' Procedure Access: Public
+' Procedure Access: Private
 '
 '=== Paramètres ===
-' oFrm (Form):
+' ChkControl (Boolean):     True : Controle uniquement le contrôle actif.
+' RestoreAllLbl (Boolean):  True : Restaure tous les label modifiés.
 '==================
 '
 ' Return Type: String Retourne la liste des champs à Saisir, ou une chaine vide si ok.
 '
 ' Author:  Laurent
 ' Date:    15/04/2022
-' DateMod: 10/06/2022 - 08:05
+' DateMod: 11/06/2022 - 13:40
 ' ----------------------------------------------------------------
-Public Function VerifChampSaisieRequi(sFrmName As String) As String
+Private Function VerifChampSaisieRequi(Optional ChkControl As Boolean = False, _
+                                      Optional RestoreAllLbl As Boolean = False) As String
 On Error GoTo ERR_VerifChampSaisieRequi
 
+    Dim sFrmName As String
     Dim sSource  As String
-    Dim sMsg     As String
+    Dim sMessage As String
     Dim bCheck   As Boolean
     Dim bRequis  As Boolean
 
-    Set m_oFrm = Application.Forms(sFrmName)
+    sFrmName = Screen.ActiveForm.Name
+
+    If (m_oFrm Is Nothing) Then
+        Set m_oFrm = Application.Forms(sFrmName)
+    ElseIf (sFrmName <> Screen.ActiveForm.Name) Then
+        Set m_oFrm = Application.Forms(sFrmName)
+    End If
+
+    '// Restaure le contrôle, utilisation sur BeforeUpdate du contrôle.
+    If (ChkControl) Then
+        Set m_oCtr = m_oFrm.Controls(Screen.ActiveControl.Name)
+        LblColorRestaure
+        GoTo SORTIE_VerifChampSaisieRequi
+    End If
 
     '// Parcourir les controles du form...
     For Each m_oCtr In m_oFrm.Controls
@@ -75,17 +138,17 @@ On Error GoTo ERR_VerifChampSaisieRequi
         If bCheck Then bRequis = ChampSaisieObligatoire(sSource)                '// Vérifie si la saisie est obligatoire...
         If bRequis Then bCheck = IIf(IsNull(m_oCtr.Value) Or (m_oCtr.Value = vbNullString), True, False)      '// Test si le ctr contient une valeur.
 
-        If (bCheck And bRequis) Then
-            sMsg = sMsg & sSource & ", "
+        If (bCheck And bRequis And RestoreAllLbl = False) Then
+            sMessage = sMessage & sSource & ", "
             LblColorApplique    '// Met le label en rouge...
         ElseIf bRequis Then
-            LblColorRestaure    '// Saisie faite, remettre sont label en l'état...
+            LblColorRestaure    '// Saisie faite, remettre texte du label en l'état...
         End If
 
         bRequis = False
     Next
 
-    VerifChampSaisieRequi = sMsg
+    VerifChampSaisieRequi = sMessage    '// Retourne la liste de champs requi non validés, ou une chaine vide.
 
 SORTIE_VerifChampSaisieRequi:
     Set m_oCtr = Nothing
@@ -98,19 +161,24 @@ ERR_VerifChampSaisieRequi:
             "Dans  VerifSaisie.MD_VerifSaisie.VerifChampSaisieRequi, ligne " & Erl & "."
     Resume SORTIE_VerifChampSaisieRequi
 End Function
-'// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ END PUB. SUB/FUNC \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-'// ################################ PRIVATE SUB/FUNC ####################################
 
 ' ----------------------------------------------------------------
-' Procedure Nom:                ChampSaisieObligatoire
-' Sujet:                        Vérifier si la saisie du champ est obligatoire dans la table.0
-' Procedure Kind:               Function
-' Procedure Access:             Private
-' Parameter oRst (Recordset):   Table a vérifier
-' Return Type:                  Boolean, True si obligatoire, ou erreur
-' Author:                       Laurent
-' Date:                         15/04/2022
+' Procedure Nom:    ChampSaisieObligatoire
+' ----------------------------------------------------------------
+' Sujet:            Vérifier si la saisie du champ est obligatoire dans la table.
+' Procedure Kind:   Function
+' Procedure Access: Private
+' Références:
+'
+'=== Paramètres ===
+' sChamp (String):  Nom du champ à vérifier.
+'==================
+'
+' Return Type: Boolean True si obligatoire, ou erreur.
+'
+' Author:  Laurent
+' Date:    15/04/2022
+' DateMod: 11/06/2022 - 13:45
 ' ----------------------------------------------------------------
 Private Function ChampSaisieObligatoire(sChamp As String) As Boolean
 On Error GoTo ERR_ChampSaisieObligatoire
@@ -138,10 +206,23 @@ Private Function ControlValide() As Boolean
     ControlValide = ((m_oCtr.Visible) And (m_oCtr.Enabled) And (Not m_oCtr.Locked))
 End Function
 
+' ----------------------------------------------------------------
+' Procedure Nom:    LblColorSauve
+' ----------------------------------------------------------------
+' Sujet:    Pour les contrôles avec source requis, et si le contrôle à un label lié,
+'           sauve la couleur texte du label, dans StatusBarText du contrôle.
+'           si StatusBarText contient déjà qq chose, on sauve la couleur à la fin du texte.
+' Procedure Kind:   Function
+' Procedure Access: Private
+' Références:
+'
+' Return Type: Boolean  TRUE si pas de problème.
+'
+' Author:  Laurent
+' Date:    11/03/2022 - 13:50
+' DateMod:
+' ----------------------------------------------------------------
 Private Function LblColorSauve() As Boolean
-'// Pour les contrôles avec source requis, et si le contrôle à un label lié,
-'// sauve la couleur texte du label, dans StatusBarText du contrôle.
-'// si StatusBarText contient déjà qq chose, on sauve la couleur à la fin du texte.
 
     If (m_oCtr.Controls.Count = 0) Then Exit Function               '// Pas de label, on sort.
 
@@ -150,19 +231,29 @@ Private Function LblColorSauve() As Boolean
     If InStr(1, m_oCtr.StatusBarText, REPCOL) Then Exit Function    '// Déjà sauver, on sort.
 
     Dim sColor  As String
-    Dim sTxt    As String
+    Dim sTxtBar As String
 
     sColor = Str$(m_oCtr.Controls(0).ForeColor) '// renvoi la couleur avec un espace devant ??
     sColor = LTrim$(sColor)
-    sTxt = Nz(m_oCtr.StatusBarText, vbNullString)
-    sTxt = sTxt & REPCOL & sColor & REPCOL
-    m_oCtr.StatusBarText = sTxt
+    sTxtBar = Nz(m_oCtr.StatusBarText, vbNullString)
+    sTxtBar = sTxtBar & REPCOL & sColor & REPCOL
+    m_oCtr.StatusBarText = sTxtBar
 
 End Function
 
+' ----------------------------------------------------------------
+' Procedure Nom:    LblColorApplique
+' ----------------------------------------------------------------
+' Sujet:    Pour les contrôles avec source requis, et si le contrôle à un label lié,
+'           met le texte du label lié au contrôle en rouge.
+' Procedure Kind:   Sub
+' Procedure Access: Private
+'
+' Author:  Laurent
+' Date:    11/06/2022 - 13:52
+' DateMod:
+' ----------------------------------------------------------------
 Private Sub LblColorApplique()
-'// Pour les contrôles avec source requis, et si le contrôle à un label lié,
-'// met le texte du label lié au contrôle en rouge.
     If (LblColorSauve() = False) Then Exit Sub   '// Pas de label, on sort.
 
     Dim sLblName As String
@@ -171,11 +262,22 @@ Private Sub LblColorApplique()
 
 End Sub
 
+' ----------------------------------------------------------------
+' Procedure Nom:    LblColorRestaure
+' ----------------------------------------------------------------
+' Sujet:    Pour les contrôles avec source requis, et si le contrôle à un label lié,
+'           on restaure la couleur du texte d'origine du label lié au contrôle.
+'           La couleur et stockée dans la prop StatusBarText du contrôle parent,
+'           encradré par la Const REPCOL.
+' Procedure Kind:   Sub
+' Procedure Access: Private
+' Références:
+'
+' Author:  Laurent
+' Date:    11/06/2022 - 13:53
+' DateMod:
+' ----------------------------------------------------------------
 Private Sub LblColorRestaure()
-'// Pour les contrôles avec source requis, et si le contrôle à un label lié,
-'// on restaure la couleur du texte d'origine du label lié au contrôle.
-'// La couleur et stockée dans la prop StatusBarText du contrôle parent,
-'// encradré par la Const REPCOL.
 
     If (m_oCtr.Controls.Count = 0) Then Exit Sub    '// Pas de label, on sort.
 
@@ -189,7 +291,6 @@ Private Sub LblColorRestaure()
     sBarTxt = m_oCtr.StatusBarText
 
     '// Obtenir la position de la couleur.
-    lPosD = InStr(1, sBarTxt, REPCOL)
     lPosF = InStr(lPosD + 2, sBarTxt, REPCOL)
 
     If (lPosD = 0) Then Exit Sub       '// Pas encore sauvegrader, on sort.
@@ -209,5 +310,8 @@ Private Sub LblColorRestaure()
     sLblName = m_oCtr.Controls(0).Name
     m_oFrm.Controls(sLblName).ForeColor = Val(sColor)
 
+End Sub
+Private Sub NewMethod(ByRef sBarTxt As String, ByRef lPosD As Long)
+    lPosD = InStr(1, sBarTxt, REPCOL)
 End Sub
 '// ################################# END PRIV. SUB/FUNC #################################
