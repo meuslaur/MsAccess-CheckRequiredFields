@@ -33,5 +33,15 @@ Private Sub Form_BeforeUpdate(Cancel As Integer)
     End If
 End Sub
 ```
+
 - Si le contrôle n'as pas de Label liè rien n'est modifier, dans ce cas vous pouvez utiliser la propriété `BorderColor`, 
 en modifier le code dans les procédures LblColorApplique(), LblColorSauve() et LblColorRestaure().
+
+## Résumé
+
+|   Créer le|   2022/06/11|
+| - | - |
+|   Auteur| [@meuslau](https://github.com/meuslaur)|
+|   Catégorie|   MsAccess|
+|   Type|   Utilitaire|
+|   Langage|   VBA|
