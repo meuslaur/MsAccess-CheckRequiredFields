@@ -5,18 +5,18 @@ Utilitaire pour contrôler les saisies dans un formulaire
 -  acCheckBox, acOptionButton, acToggleButton, acOptionGroup
 -  acListBox, acComboBox 
 -  acTextBox
-### Contrôles éffectués :
+### Contrôles effectués :
 - Vérifier la source du contrôle (`Not Null or <> "="`)
 - Vérifier l'état du contrôle (`Enabled, Visible, Not Locked`)
-- Vérifier si le champs source du contrôle et Required dans la table source.
+- Vérifier si le champs source du contrôle est Required dans la table source.
 - Vérifier si le contrôle contient une saisie (`<> VbNullString or Not IsNull`)
 ### Opérations effectuées :
 - Stock les champs Required non saisis
 - Modifie la couleur de texte du label du contrôle :
-- - Sauvegrade la couler d'origine { `Function LblColorSauve()` }
+- - Sauvegarde la couleur d'origine { `Function LblColorSauve()` }
 - - Modifie la couleur du texte du label { `Sub LblColorApplique()` }
 - - Restaure la couleur texte label si saisie correcte { `Sub LblColorRestaure()` }
-- La couleur d'origine est enregistrée dans la prorpriété StatusBarText du contrôle
+- La couleur d'origine est enregistrée dans la propriété StatusBarText du contrôle
 - Si StatusBarText contient du texte ils est restauré a l'origine.
 ### Utilisation :
 - La fonction `VerifChampSaisieRequi()` retourne la liste des champs requis dans la table source qui n'ont pas était validés.
@@ -37,8 +37,8 @@ On Error GoTo ERR_MajF
 End Sub
 ```
 
-- Si le contrôle n'as pas de Label liè rien n'est modifier, dans ce cas vous pouvez utiliser la propriété `BorderColor`, 
-en modifier le code dans les procédures LblColorApplique(), LblColorSauve() et LblColorRestaure().
+- Si le contrôle n'a pas de Label lié rien n'est modifié, dans ce cas vous pouvez utiliser la propriété `BorderColor`, 
+en modifiant le code dans les procédures LblColorApplique(), LblColorSauve() et LblColorRestaure().
 
 ## Résumé
 
