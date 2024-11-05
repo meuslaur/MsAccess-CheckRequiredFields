@@ -1,3 +1,5 @@
+<img align="left" src="https://github.com/meuslaur/meuslaur/blob/main/Logo_MsAccess.png" width="64px">
+
 # MsAccess-CheckRequiredFields
 Utilitaire pour contrôler les saisies dans un formulaire
 ## Cet utilitaire contrôle les saisies dans un formulaire avant la MàJ de celui-ci
